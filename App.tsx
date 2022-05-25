@@ -29,8 +29,6 @@ const App: FC<any> = () => {
     /// 1.  Subscribe to events.
     const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
       console.log('[onLocation]', location);  
-      const northeastLat = location.coords.latitude;
-      const southwestLat = location.coords.longitude;
       const latDelta = 0.0922;
       const lngDelta = latDelta * ASPECT_RATIO;
       const region = {
@@ -41,19 +39,19 @@ const App: FC<any> = () => {
       }
       setLocation(JSON.stringify(location, null, 2));
       setRegion(region);
-      console.log('region', region);
+     // console.log('region', region);
     })
 
     const onMotionChange:Subscription = BackgroundGeolocation.onMotionChange((event) => {
-      console.log('[onMotionChange]', event);
+      //console.log('[onMotionChange]', event);
     });
 
     const onActivityChange:Subscription = BackgroundGeolocation.onActivityChange((event) => {
-      console.log('[onMotionChange]', event);
+      //console.log('[onMotionChange]', event);
     })
 
     const onProviderChange:Subscription = BackgroundGeolocation.onProviderChange((event) => {
-      console.log('[onProviderChange]', event);
+      //console.log('[onProviderChange]', event);
     })
 
     /// 2. ready the plugin.
@@ -113,7 +111,7 @@ const App: FC<any> = () => {
       >
         <Marker
           coordinate={{ 
-            latitude : region.latitude , 
+            latitude : region.latitude, 
             longitude : region.longitude 
           }}
         />
@@ -125,7 +123,7 @@ const App: FC<any> = () => {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    flex: 1, //the container will fill the whole screen.
+    flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
   },
