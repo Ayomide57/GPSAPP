@@ -1,24 +1,47 @@
-import React from 'react';
+import React, {FC} from 'react';
 import {
-  Switch,
-  Text,
   View,
+  StyleSheet,
 } from 'react-native';
 
 import BackgroundGeolocation, {
   Location,
   Subscription
 } from "react-native-background-geolocation";
+import MapView, { Marker } from 'react-native-maps';
+import { Dimensions } from 'react-native';
 
-const App = () => {
-  const [enabled, setEnabled] = React.useState(false);
+
+const App: FC<any> = () => {
+  const [enabled, setEnabled] = React.useState(true);
   const [location, setLocation] = React.useState('');
+  const [region, setRegion] = React.useState({
+    latitude: 37.78825,
+    longitude: -122.4324,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
+  const { width, height } = Dimensions.get('window');
+  const ASPECT_RATIO = width / height;
+
 
   React.useEffect(() => {
     /// 1.  Subscribe to events.
     const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
-      console.log('[onLocation]', location);
+      console.log('[onLocation]', location);  
+      const northeastLat = location.coords.latitude;
+      const southwestLat = location.coords.longitude;
+      const latDelta = 0.0922;
+      const lngDelta = latDelta * ASPECT_RATIO;
+      const region = {
+        latitude: location.coords.latitude, 
+        longitude: location.coords.longitude,
+        latitudeDelta: latDelta,
+        longitudeDelta: lngDelta,
+      }
       setLocation(JSON.stringify(location, null, 2));
+      setRegion(region);
+      console.log('region', region);
     })
 
     const onMotionChange:Subscription = BackgroundGeolocation.onMotionChange((event) => {
@@ -82,12 +105,33 @@ const App = () => {
   }, [enabled]);
 
   return (
-    <View style={{alignItems:'center'}}>
-      <Text>Click to enable BackgroundGeolocation</Text>
-      <Switch value={enabled} onValueChange={setEnabled} />
-      <Text style={{fontFamily:'monospace', fontSize:12}}>{location}</Text>
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        region={region}
+        onRegionChangeComplete={(region) => setRegion(region)}
+      >
+        <Marker
+          coordinate={{ 
+            latitude : region.latitude , 
+            longitude : region.longitude 
+          }}
+        />
+      </MapView>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    flex: 1, //the container will fill the whole screen.
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+});
 
 export default App;
