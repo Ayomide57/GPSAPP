@@ -16,6 +16,8 @@
 
 #import <react/config/ReactNativeConfig.h>
 
+
+
 @interface AppDelegate () <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
   RCTTurboModuleManager *_turboModuleManager;
   RCTSurfacePresenterBridgeAdapter *_bridgeAdapter;
@@ -29,6 +31,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  //[GMSServices provideAPIKey:@"AIzaSyDX_Kybl_s0Vifgs3eTOIKrc3jPivQyhgg"]; // add this line using the api key obtained from Google Console
+
   RCTAppSetupPrepareApp(application);
 
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
