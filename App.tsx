@@ -2,6 +2,8 @@ import React, {FC} from 'react';
 import {
   View,
   StyleSheet,
+  Platform,
+  Dimensions,
 } from 'react-native';
 
 import BackgroundGeolocation, {
@@ -9,12 +11,15 @@ import BackgroundGeolocation, {
   Subscription
 } from "react-native-background-geolocation";
 import MapView, { Marker } from 'react-native-maps';
-import { Dimensions } from 'react-native';
+import BackgroundFetch from "react-native-background-fetch";
+import Geolocation from "react-native-geolocation-service";
 
 
-const App: FC<any> = () => {
+
+const App: FC<any> = (props) => {
   const [enabled, setEnabled] = React.useState(true);
   const [location, setLocation] = React.useState('');
+  const [isMoving, setIsMoving] = React.useState(false);
   const [region, setRegion] = React.useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -24,11 +29,77 @@ const App: FC<any> = () => {
   const { width, height } = Dimensions.get('window');
   const ASPECT_RATIO = width / height;
 
+  const regionFrom = (lat, lon, distance) => {
+    distance = distance/2
+    const circumference = 40075
+    const oneDegreeOfLatitudeInMeters = 111.32 * 1000
+    const angularDistance = distance/circumference
+
+    const latitudeDelta = distance / oneDegreeOfLatitudeInMeters
+    const longitudeDelta = Math.abs(Math.atan2(
+            Math.sin(angularDistance)*Math.cos(lat),
+            Math.cos(angularDistance) - Math.sin(lat) * Math.sin(lat)))
+
+    return {
+        latitude: lat,
+        longitude: lon,
+        latitudeDelta,
+        longitudeDelta,
+    }
+  }
+
+  /**const getMyLocation  = () => BackgroundGeolocation.getCurrentPosition({
+    timeout: 30,          // 30 second timeout to fetch location
+    desiredAccuracy: 10,  // Try to fetch a location with an accuracy of `10` meters.
+    samples: 3,           // How many location samples to attempt.
+    extras: {             // Custom meta-data.
+      "route_id": 123
+    }
+  });**/
+
+  const initBackgroundFetch = async() => {
+    BackgroundFetch.configure({
+      minimumFetchInterval: 15,
+      enableHeadless: true,
+      stopOnTerminate: false
+    }, async (taskId) => {
+      console.log('[BackgroundFetch]', taskId);
+      BackgroundFetch.finish(taskId);
+    }, (taskId) => {
+      console.log('[BackgroundFetch] TIMEOUT:', taskId);
+      BackgroundFetch.finish(taskId);
+    });
+  }
+
+
+
+
+  const onClickGetCurrentPosition = () => {
+    BackgroundGeolocation.getCurrentPosition({
+      persist: true,
+      samples: 1,
+      timeout: 30,
+      extras: {
+        getCurrentPosition: true
+      }
+    }).then((location:Location) => {
+      console.log('[getCurrentPosition] success: ', location);
+    }).catch((error:LocationError) => {
+      console.warn('[getCurrentPosition] error: ', error);
+    });
+  }
+
+  /// changePace handler.
+  /**const onClickChangePace = () => {
+    BackgroundGeolocation.changePace(!isMoving);
+    setIsMoving(!isMoving);
+  }**/
+
 
   React.useEffect(() => {
     /// 1.  Subscribe to events.
     const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
-      console.log('[onLocation]', location);  
+      //console.log('[onLocation]', location);  
       const latDelta = 0.0922;
       const lngDelta = latDelta * ASPECT_RATIO;
       const region = {
@@ -38,9 +109,36 @@ const App: FC<any> = () => {
         longitudeDelta: lngDelta,
       }
       setLocation(JSON.stringify(location, null, 2));
-      setRegion(region);
-     // console.log('region', region);
+      setRegion(region);      
     })
+
+    //initBackgroundFetch();
+    //onClickGetCurrentPosition();  
+
+    /**Geolocation.getCurrentPosition(
+      position => {
+        this.setState({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          coordinates: this.state.coordinates.concat({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+        });
+        console.log('MyCurrentLocation', position.coords.longitude);
+      },
+      error => {
+        //Alert.alert(error.message.toString());
+        console.log('geolocation error:', error)
+      },
+      {
+        showLocationDialog: true,
+        enableHighAccuracy: true,
+        timeout: 20000,
+      }
+    );**/
+
+    //console.log('MyCurrentLocation', getMyLocation());
 
     const onMotionChange:Subscription = BackgroundGeolocation.onMotionChange((event) => {
       //console.log('[onMotionChange]', event);
